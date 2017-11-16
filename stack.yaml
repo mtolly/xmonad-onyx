@@ -1,0 +1,11 @@
+packages:
+- '.'
+- location:
+    git: git://github.com/xmonad/xmonad
+    commit: 12a45b4b99af17997288815792b8bdb9919091b0
+  extra-dep: true
+- location:
+    git: git://github.com/xmonad/xmonad-contrib
+    commit: 89a0fdf7fe6861a4ce57de6a375a0b71c612f49a
+  extra-dep: true
+resolver: nightly-2017-09-10
