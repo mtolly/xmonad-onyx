@@ -1,4 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Main where
 
 import XMonad
@@ -15,6 +16,7 @@ import System.Exit
 import Data.List (isPrefixOf)
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.SetWMName
+import Data.Maybe (fromMaybe)
 
 confirm :: String -> X () -> X ()
 confirm m f = do
@@ -22,12 +24,14 @@ confirm m f = do
   when ("y" `isPrefixOf` result) f
 
 xmobarHighlight :: String
-xmobarHighlight = "#c79df2"
+xmobarHighlight = "#fc99cb"
 
 myManageHook :: ManageHook
 myManageHook = composeAll
   [ className =? "discord" --> doShift "8disc"
   , className =? "Keepassx" --> doShift "9pw"
+  , className =? "keepassxc" --> doShift "9pw"
+  , className =? "KeePassXC" --> doShift "9pw"
   ]
 
 rofiOptions :: String
@@ -37,7 +41,7 @@ main :: IO ()
 main = do
   xmproc <- spawnPipe "xmobar"
   spawn "killall nautilus"
-  spawn "feh --bg-fill /home/mtolly/Pictures/1519244725109.jpg"
+  spawn "feh --randomize --bg-fill /home/mtolly/Pictures/*"
   xmonad $ docks $ ewmh def
     { manageHook = myManageHook <+> manageHook def
     , layoutHook = let
@@ -45,16 +49,26 @@ main = do
       adjust = avoidStruts
       in adjust tiled ||| noBorders Full
     , workspaces = ["1", "2", "3", "4", "5", "6", "7", "8disc", "9pw"]
-    , logHook = dynamicLogWithPP xmobarPP
-      { ppOutput = hPutStrLn xmproc
-      , ppCurrent = xmobarColor xmobarHighlight "" . wrap "(" ")"
-      , ppTitle = xmobarColor xmobarHighlight "" . shorten 100
-      , ppLayout = const ""
-      , ppSep = " — "
-      }
+    , logHook = do
+      dynamicLogString xmobarPP
+        { ppCurrent = xmobarColor xmobarHighlight "" . map
+          (\c -> fromMaybe c $ lookup c $ zip "0123456789" "⓿❶❷❸❹❺❻❼❽❾")
+        , ppHidden = map
+          (\c -> fromMaybe c $ lookup c $ zip "0123456789" "⓪①②③④⑤⑥⑦⑧⑨")
+        , ppTitle = const ""
+        , ppLayout = const ""
+        } >>= xmonadPropLog
+      dynamicLogWithPP xmobarPP
+        { ppOutput = hPutStrLn xmproc
+        , ppTitle = xmobarColor xmobarHighlight "" . shorten 120
+        , ppCurrent = const ""
+        , ppVisible = const ""
+        , ppHidden = const ""
+        , ppLayout = const ""
+        }
     , focusFollowsMouse = False
     , borderWidth = 2
-    , focusedBorderColor = "#eee"
+    , focusedBorderColor = "#fcbbb3"
     , normalBorderColor = "#222"
     , modMask = mod4Mask
     , startupHook = do
@@ -64,7 +78,7 @@ main = do
       spawnOnce "nm-applet"
       spawnOnce "pasystray"
       spawnOnce "redshift-gtk -l43.0481434:-89.3455351"
-      spawnOnce "keepassx"
+      spawnOnce "keepassxc"
       spawnOnce "discord"
       setWMName "LG3D"
     } `additionalKeys`
